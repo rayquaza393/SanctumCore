@@ -12,7 +12,10 @@ using json = nlohmann::json;
 
 int main()
 {
+    GlobalLogger.Info("=== Starting SanctumCore Server ===");
+
     // Load config.json
+    GlobalLogger.Info("Loading config.json...");
     json config;
     std::ifstream configFile("config.json");
     if (!configFile.is_open())
@@ -23,6 +26,7 @@ int main()
 
     try {
         configFile >> config;
+        GlobalLogger.Success("config.json loaded successfully.");
     }
     catch (const std::exception& e) {
         GlobalLogger.Error(std::string("Failed to parse config.json: ") + e.what());
@@ -41,6 +45,8 @@ int main()
     std::string dbName = config["database"];
     int socketPort = config["socket_port"];
 
+    GlobalLogger.Info("Attempting database connection...");
+
     // Connect to MySQL
     MYSQL* conn = mysql_init(nullptr);
     if (!conn)
@@ -56,9 +62,10 @@ int main()
         return 1;
     }
 
-    GlobalLogger.Info("Connected to database: " + dbName);
+    GlobalLogger.Success("Connected to database: " + dbName);
 
     // Start socket server
+    GlobalLogger.Info("Starting socket server on port " + std::to_string(socketPort) + "...");
     SocketServer server(socketPort, conn);
     if (!server.start())
     {
@@ -68,9 +75,15 @@ int main()
     }
 
     // CLI loop
-    std::string input;
-    GlobalLogger.Raw("\n========== SanctumCore CLI ==========\n***********************************************\nType '/help' for a list of available commands.\nType 'exit' to shut down.\n");
+    GlobalLogger.Raw(R"(
+\x1b[36m
+========= SanctumCore CLI =========
+***********************************
+Type '/help' for a list of commands
+Type 'exit' to shut down
+\x1b[0m)");
 
+    std::string input;
     while (true)
     {
         std::cout << "> ";
@@ -78,14 +91,20 @@ int main()
 
         if (input == "exit")
         {
-            GlobalLogger.Info("Shutting down server...");
+            GlobalLogger.Warning("Shutting down server...");
             break;
         }
 
+        GlobalLogger.Info("Executing command: " + input);
         handleCommand(conn, input);
     }
 
+    GlobalLogger.Info("Stopping socket server...");
     server.stop();
+
+    GlobalLogger.Info("Closing MySQL connection...");
     mysql_close(conn);
+
+    GlobalLogger.Success("SanctumCore server shut down cleanly.");
     return 0;
 }

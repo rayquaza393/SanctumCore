@@ -1,0 +1,1 @@
+C:\GameServer\Server_Core\x64\Debug\config.json

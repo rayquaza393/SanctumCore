@@ -1,0 +1,11 @@
+C:\GameServer\Server_Core\Server_Core\deps\duktape\duktape.c;C:\GameServer\Server_Core\Server_Core\x64\Debug\duktape.obj
+C:\GameServer\Server_Core\Server_Core\src\AuthHandler.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\AuthHandler.obj
+C:\GameServer\Server_Core\Server_Core\src\CommandHandler.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\CommandHandler.obj
+C:\GameServer\Server_Core\Server_Core\src\HashUtils.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\HashUtils.obj
+C:\GameServer\Server_Core\Server_Core\src\Logger.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\Logger.obj
+C:\GameServer\Server_Core\Server_Core\src\main.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\main.obj
+C:\GameServer\Server_Core\Server_Core\src\ScriptEngine.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\ScriptEngine.obj
+C:\GameServer\Server_Core\Server_Core\src\ScriptRunner.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\ScriptRunner.obj
+C:\GameServer\Server_Core\Server_Core\src\SessionManager.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\SessionManager.obj
+C:\GameServer\Server_Core\Server_Core\src\SocketServer.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\SocketServer.obj
+C:\GameServer\Server_Core\Server_Core\src\ZoneLoader.cpp;C:\GameServer\Server_Core\Server_Core\x64\Debug\ZoneLoader.obj

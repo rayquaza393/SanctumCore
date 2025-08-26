@@ -19,21 +19,35 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="deps\duktape\duktape.c" />
+    <ClCompile Include="src\AuthHandler.cpp" />
     <ClCompile Include="src\CommandHandler.cpp" />
+    <ClCompile Include="src\DuktapeBindings.cpp" />
     <ClCompile Include="src\HashUtils.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\ScriptEngine.cpp" />
+    <ClCompile Include="src\ScriptRunner.cpp" />
+    <ClCompile Include="src\SessionManager.cpp" />
     <ClCompile Include="src\SocketServer.cpp" />
-    <ClCompile Include="src\Source.cpp" />
+    <ClCompile Include="src\ZoneLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="deps\duktape\duktape.h" />
+    <ClInclude Include="include\AuthHandler.hpp" />
     <ClInclude Include="include\CommandHandler.hpp" />
     <ClInclude Include="include\HashUtils.hpp" />
     <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\Logger.hpp" />
+    <ClInclude Include="include\Room.hpp" />
+    <ClInclude Include="include\ScriptEngine.hpp" />
+    <ClInclude Include="include\ScriptRunner.hpp" />
+    <ClInclude Include="include\SessionManager.hpp" />
     <ClInclude Include="include\SocketServer.hpp" />
+    <ClInclude Include="include\ZoneLoader.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\x64\Debug\extensions\PlayerCharacterList.js" />
     <None Include="config\config.json">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <FileType>Document</FileType>
@@ -132,7 +146,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files\MariaDB\MariaDB\include;$(ProjectDir)\include;$(ProjectDir)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)deps\\duktape;C:\Program Files\MariaDB\MariaDB\include;$(ProjectDir)\include;$(ProjectDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

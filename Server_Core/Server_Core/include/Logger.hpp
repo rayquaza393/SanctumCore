@@ -1,26 +1,33 @@
-#pragma once
+﻿#pragma once
 #include <string>
-#include <fstream>
-#include <mutex>
-#include <iostream>
+#include <unordered_map>
 
-class Logger
-{
+enum class LogChannel {
+    AUTH,
+    PACKET,
+    CHARACTER,
+    SCRIPT,
+    CLI,
+    ERROR_LOG,
+    SESSION,
+    SYSTEM
+};
+
+class Logger {
 public:
-    explicit Logger(const std::string& filename);
-    ~Logger();
+    void Info(const std::string& msg);
+    void Error(const std::string& msg);
+    void Warning(const std::string& msg);
+    void Success(const std::string& msg);
+    void Debug(const std::string& msg);
+    void Raw(const std::string& msg);
 
-    void Info(const std::string& message);
-    void Warn(const std::string& message);
-    void Error(const std::string& message);
-    void Raw(const std::string& message);
+    void Log(LogChannel channel, const std::string& msg);
+
+    static void SetChannelEnabled(LogChannel channel, bool enabled);
 
 private:
-    std::ofstream logFile;
-    std::mutex logMutex;
-
-    void Write(const std::string& level, const std::string& message);
-    std::string GetTimestamp();
+    static std::unordered_map<LogChannel, bool> channelEnabled;
 };
 
 extern Logger GlobalLogger;
