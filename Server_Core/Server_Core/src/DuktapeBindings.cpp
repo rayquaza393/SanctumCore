@@ -1,73 +1,89 @@
+﻿#include "ScriptEngine.hpp"
+#include "Logger.hpp"
 #include "DuktapeBindings.hpp"
+#include "../deps/duktape/duktape.h"
+#include <fstream>
+#include <sstream>
+#include <string>
+#include "json.hpp"
 
-static MYSQL* boundDB = nullptr;
-
-static duk_ret_t DB_query(duk_context* ctx) {
-    if (!duk_is_string(ctx, 0)) {
-        return duk_error(ctx, DUK_ERR_TYPE_ERROR, "First argument must be SQL query string.");
+nlohmann::json ScriptEngine::Execute(const std::string& scriptCode, const nlohmann::json& input) {
+    duk_context* ctx = duk_create_heap_default();
+    if (!ctx) {
+        GlobalLogger.Error("Failed to create Duktape heap");
+        return {
+            {"type", "script.error"},
+            {"success", false},
+            {"reason", "Duktape heap creation failed"},
+            {"data", nlohmann::json::object()}
+        };
     }
 
-    std::string query = duk_get_string(ctx, 0);
+    try {
+        // Inject input JSON as global 'input'
+        std::string inputJson = input.dump();
+        duk_push_lstring(ctx, inputJson.c_str(), inputJson.length());
+        duk_json_decode(ctx, -1);
+        duk_put_global_string(ctx, "input");
 
-    std::vector<std::string> args;
-    if (duk_is_array(ctx, 1)) {
-        duk_size_t len = duk_get_length(ctx, 1);
-        for (duk_uarridx_t i = 0; i < len; ++i) {
-            duk_get_prop_index(ctx, 1, i);
-            if (duk_is_string(ctx, -1)) {
-                args.push_back(duk_get_string(ctx, -1));
-            }
-            else {
-                args.push_back(duk_json_encode(ctx, -1));
-            }
-            duk_pop(ctx);
+        // 🔌 Inject native DB API
+        extern MYSQL* GlobalDBHandle; // Defined in main or wherever auth DB is created
+        DuktapeBindings::InjectDatabaseAPI(ctx, GlobalDBHandle);
+
+        // Eval script
+        if (duk_peval_string(ctx, scriptCode.c_str()) != 0) {
+            std::string err = duk_safe_to_string(ctx, -1);
+            duk_destroy_heap(ctx);
+            return {
+                {"type", "script.error"},
+                {"success", false},
+                {"reason", err},
+                {"data", nlohmann::json::object()}
+            };
         }
-    }
 
-    for (const auto& arg : args) {
-        size_t pos = query.find("?");
-        if (pos == std::string::npos) break;
-        query.replace(pos, 1, "'" + arg + "'");
-    }
+        // module.exports should now be on top of the stack
+        duk_get_global_string(ctx, "module");
+        duk_get_prop_string(ctx, -1, "exports");
 
-    if (mysql_query(boundDB, query.c_str()) != 0) {
-        GlobalLogger.Error("MySQL query failed: " + std::string(mysql_error(boundDB)));
-        duk_push_null(ctx);
-        return 1;
-    }
+        // Push args: conn (null), input, respond()
+        duk_push_null(ctx); // conn stub
+        duk_get_global_string(ctx, "input");
 
-    MYSQL_RES* res = mysql_store_result(boundDB);
-    if (!res) {
-        duk_push_array(ctx);
-        return 1;
-    }
+        // Push respond() shim
+        duk_push_c_function(ctx, [](duk_context* ctx) -> duk_ret_t {
+            nlohmann::json* out = reinterpret_cast<nlohmann::json*>(duk_get_heapptr(ctx, -1));
+            *out = nlohmann::json::parse(duk_json_encode(ctx, 0));
+            return 0;
+            }, 1);
 
-    MYSQL_ROW row;
-    int num_fields = mysql_num_fields(res);
-    MYSQL_FIELD* fields = mysql_fetch_fields(res);
+        // Create space for output
+        nlohmann::json response;
+        duk_push_pointer(ctx, &response);
 
-    duk_idx_t arr_idx = duk_push_array(ctx);
-    int row_idx = 0;
-
-    while ((row = mysql_fetch_row(res))) {
-        duk_idx_t obj_idx = duk_push_object(ctx);
-        for (int i = 0; i < num_fields; ++i) {
-            duk_push_string(ctx, fields[i].name);
-            duk_push_string(ctx, row[i] ? row[i] : "null");
-            duk_put_prop(ctx, obj_idx);
+        // Call exported function
+        if (duk_pcall(ctx, 3) != 0) {
+            std::string err = duk_safe_to_string(ctx, -1);
+            duk_destroy_heap(ctx);
+            return {
+                {"type", "script.error"},
+                {"success", false},
+                {"reason", err},
+                {"data", nlohmann::json::object()}
+            };
         }
-        duk_put_prop_index(ctx, arr_idx, row_idx++);
+
+        duk_destroy_heap(ctx);
+        return response;
+
     }
-
-    mysql_free_result(res);
-    return 1;
-}
-
-void DuktapeBindings::InjectDatabaseAPI(duk_context* ctx, MYSQL* db) {
-    boundDB = db;
-
-    duk_push_object(ctx);
-    duk_push_c_function(ctx, DB_query, 2);
-    duk_put_prop_string(ctx, -2, "query");
-    duk_put_global_string(ctx, "DB");
+    catch (...) {
+        duk_destroy_heap(ctx);
+        return {
+            {"type", "script.error"},
+            {"success", false},
+            {"reason", "Unhandled exception in ScriptEngine"},
+            {"data", nlohmann::json::object()}
+        };
+    }
 }

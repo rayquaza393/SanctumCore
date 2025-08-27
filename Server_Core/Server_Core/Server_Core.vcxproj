@@ -36,6 +36,7 @@
     <ClInclude Include="deps\duktape\duktape.h" />
     <ClInclude Include="include\AuthHandler.hpp" />
     <ClInclude Include="include\CommandHandler.hpp" />
+    <ClInclude Include="include\DuktapeBindings.hpp" />
     <ClInclude Include="include\HashUtils.hpp" />
     <ClInclude Include="include\json.hpp" />
     <ClInclude Include="include\Logger.hpp" />

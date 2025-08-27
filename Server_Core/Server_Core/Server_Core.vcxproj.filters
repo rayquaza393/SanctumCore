@@ -95,6 +95,9 @@
     <ClInclude Include="deps\duktape\duktape.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\DuktapeBindings.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="config\config.json">
